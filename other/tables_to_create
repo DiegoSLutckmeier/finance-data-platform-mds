@@ -1,0 +1,258 @@
+SQL
+
+--tables to be created:
+
+CREATE TABLE BRONZE.STRIPE_CUSTOMERS (
+    -- 1. id
+    CUSTOMER_ID                         STRING,
+    -- 2. object
+    OBJECT_TYPE                         STRING,
+    -- 3. address
+    ADDRESS                             VARIANT,
+    -- 4. balance
+    BALANCE                             NUMBER(38,0),
+    -- 5. created
+    CREATED_AT                          TIMESTAMP_NTZ,
+    -- 6. currency
+    CURRENCY                            STRING,
+    -- 7. customer_account
+    CUSTOMER_ACCOUNT                    STRING,
+    -- 8. default_source
+    DEFAULT_SOURCE                      STRING,
+    -- 9. delinquent
+    DELINQUENT                          BOOLEAN,
+    -- 10. description
+    DESCRIPTION                         STRING,
+    -- 11. discount
+    DISCOUNT                            VARIANT,
+    -- 12. email
+    EMAIL                               STRING,
+    -- 13. invoice_prefix
+    INVOICE_PREFIX                      STRING,
+    -- 14. invoice_settings.custom_fields
+    INVOICE_CUSTOM_FIELDS               VARIANT,
+    -- 15. invoice_settings.default_payment_method
+    INVOICE_DEFAULT_PAYMENT_METHOD      STRING,
+    -- 16. invoice_settings.footer
+    INVOICE_FOOTER                      STRING,
+    -- 17. invoice_settings.rendering_options
+    INVOICE_RENDERING_OPTIONS           VARIANT,
+    -- 18. livemode
+    LIVEMODE                            BOOLEAN,
+    -- 19. metadata
+    METADATA                            VARIANT,
+    -- 20. name
+    NAME                                STRING,
+    -- 21. next_invoice_sequence
+    NEXT_INVOICE_SEQUENCE               NUMBER(38,0),
+    -- 22. phone
+    PHONE                               STRING,
+    -- 23. preferred_locales
+    PREFERRED_LOCALES                   VARIANT,
+    -- 24. shipping
+    SHIPPING                            VARIANT,
+    -- 25. tax_exempt
+    TAX_EXEMPT                          STRING,
+    -- 26. test_clock
+    TEST_CLOCK                          STRING,
+    -- 27. full Stripe object
+    RAW_STRIPE_PAYLOAD                  VARIANT,
+    -- 28. ingestion timestamp
+    INGESTED_AT                         TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+    -- 29. updated timestamp
+    UPDATED_AT                          TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+
+CREATE OR REPLACE TABLE BRONZE.STRIPE_BALANCE (
+    BALANCE_ID         STRING        DEFAULT UUID_STRING(),
+    OBJECT_TYPE        STRING,        -- e.g. "balance"
+    LIVEMODE           BOOLEAN,
+
+    -- Nested Stripe arrays (kept as-is)
+    AVAILABLE          VARIANT,       -- array of {amount, currency, source_types}
+    PENDING            VARIANT,
+    CONNECT_RESERVED   VARIANT,
+
+    -- Full original API payload for audit & replay
+    RAW_PAYLOAD        VARIANT,
+
+    -- Ingestion metadata
+    INGESTED_AT        TIMESTAMP_NTZ  DEFAULT CURRENT_TIMESTAMP(),
+    -- Updated timestamp
+    UPDATED_AT         TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+
+CREATE OR REPLACE TABLE BRONZE.STRIPE_PAYMENT_INTENTS (
+    PAYMENT_INTENT_ID      STRING,
+    OBJECT_TYPE            STRING,
+
+    -- Monetary fields (in minor units, e.g. cents)
+    AMOUNT                 NUMBER,
+    AMOUNT_CAPTURABLE      NUMBER,
+    AMOUNT_RECEIVED        NUMBER,
+    CURRENCY               STRING,
+
+    -- Status & lifecycle
+    STATUS                 STRING,
+    CAPTURE_METHOD         STRING,
+    CONFIRMATION_METHOD    STRING,
+    CREATED_AT             TIMESTAMP_NTZ,
+    LIVEMODE               BOOLEAN,
+
+    -- Relationships
+    CUSTOMER_ID            STRING,
+    LATEST_CHARGE_ID       STRING,
+    PAYMENT_METHOD_ID      STRING,
+
+    -- Nested Stripe objects
+    AMOUNT_DETAILS         VARIANT,
+    AUTOMATIC_PAYMENT_METHODS VARIANT,
+    PAYMENT_METHOD_OPTIONS VARIANT,
+    PAYMENT_METHOD_TYPES   VARIANT,
+    METADATA               VARIANT,
+    LAST_PAYMENT_ERROR     VARIANT,
+    NEXT_ACTION            VARIANT,
+    TRANSFER_DATA          VARIANT,
+
+    -- Full original payload
+    RAW_PAYLOAD            VARIANT,
+
+    -- Ingestion metadata
+    INGESTED_AT            TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+    -- Updated timestamp
+    UPDATED_AT             TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+
+
+
+CREATE OR REPLACE TABLE BRONZE.STRIPE_CHARGES (
+    CHARGE_ID                 STRING,
+    OBJECT_TYPE               STRING,
+
+    -- Money
+    AMOUNT                    NUMBER,
+    AMOUNT_CAPTURED           NUMBER,
+    AMOUNT_REFUNDED           NUMBER,
+    CURRENCY                  STRING,
+
+    -- Status
+    PAID                      BOOLEAN,
+    CAPTURED                  BOOLEAN,
+    REFUNDED                  BOOLEAN,
+    DISPUTED                  BOOLEAN,
+    STATUS                    STRING,
+    LIVEMODE                  BOOLEAN,
+
+    -- Relationships
+    PAYMENT_INTENT_ID         STRING,
+    PAYMENT_METHOD_ID         STRING,
+    CUSTOMER_ID               STRING,
+    BALANCE_TRANSACTION_ID   STRING,
+
+    -- Timing
+    CREATED_AT                TIMESTAMP_NTZ,
+
+    -- Stripe nested objects
+    BILLING_DETAILS           VARIANT,
+    OUTCOME                   VARIANT,
+    FRAUD_DETAILS             VARIANT,
+    PAYMENT_METHOD_DETAILS    VARIANT,
+    METADATA                  VARIANT,
+    SHIPPING                  VARIANT,
+
+    -- URLs & descriptors
+    RECEIPT_URL               STRING,
+    STATEMENT_DESCRIPTOR     STRING,
+    STATEMENT_DESCRIPTOR_SUFFIX STRING,
+
+    -- Full payload
+    RAW_PAYLOAD               VARIANT,
+
+    INGESTED_AT               TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+    -- Updated timestamp
+    UPDATED_AT             TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+
+CREATE OR REPLACE TABLE BRONZE.STRIPE_BALANCE_TRANSACTIONS (
+    BALANCE_TRANSACTION_ID   STRING,
+    OBJECT_TYPE              STRING,
+
+    -- Accounting
+    AMOUNT                   NUMBER,
+    FEE                      NUMBER,
+    NET                      NUMBER,
+    CURRENCY                 STRING,
+
+    -- Classification
+    TYPE                     STRING,
+    REPORTING_CATEGORY       STRING,
+    STATUS                   STRING,
+
+    -- Relationships
+    SOURCE_ID                STRING,
+
+    -- Timing
+    CREATED_AT               TIMESTAMP_NTZ,
+    AVAILABLE_ON             TIMESTAMP_NTZ,
+
+    -- Nested Stripe objects
+    FEE_DETAILS              VARIANT,
+    EXCHANGE_RATE            NUMBER,
+    DESCRIPTION              STRING,
+
+    -- Full payload
+    RAW_PAYLOAD              VARIANT,
+
+    INGESTED_AT              TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+    -- Updated timestamp
+    UPDATED_AT             TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+
+
+CREATE OR REPLACE TABLE BRONZE.STRIPE_PAYOUTS (
+    PAYOUT_ID                STRING,
+    OBJECT_TYPE              STRING,
+
+    -- Money
+    AMOUNT                   NUMBER,
+    CURRENCY                 STRING,
+
+    -- Status
+    STATUS                   STRING,
+    METHOD                   STRING,
+    TYPE                     STRING,
+    AUTOMATIC                BOOLEAN,
+    LIVEMODE                 BOOLEAN,
+
+    -- Timing
+    CREATED_AT               TIMESTAMP_NTZ,
+    ARRIVAL_DATE             TIMESTAMP_NTZ,
+
+    -- Relationships
+    BALANCE_TRANSACTION_ID   STRING,
+    DESTINATION_ID           STRING,
+    ORIGINAL_PAYOUT_ID       STRING,
+    REVERSED_BY_ID           STRING,
+
+    -- Failure handling
+    FAILURE_CODE             STRING,
+    FAILURE_MESSAGE          STRING,
+    FAILURE_BALANCE_TRANSACTION_ID STRING,
+
+    -- Metadata
+    METADATA                 VARIANT,
+
+    -- Full payload
+    RAW_PAYLOAD              VARIANT,
+
+    INGESTED_AT              TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP(),
+    -- Updated timestamp
+    UPDATED_AT             TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);
+
+
