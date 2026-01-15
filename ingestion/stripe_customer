@@ -1,0 +1,29 @@
+import stripe
+import pandas as pd
+from snowflake import connector
+
+stripe.api_key = "sk_test_51SorWHGWM0V2FiE10HNFG4w5SASb6lnR1qGiYr4VMVx9bbIFm6sWgEzWQXwR1sPdEyniEhe4BSTtjIFcg2hLKKn000MOLecxcc"
+
+con = connector.connect(
+    user='STRIPE_PIPELINE_USER',
+    password='123456789',
+    account='CUTHAVV-PN30619',
+    warehouse='FINANCE_DATA_PLATFORM_DW',
+    database='FINANCIAL_DATA_PLATFORM_DB',
+    schema='BRONZE'
+)
+
+customers_stripe = stripe.Customer.list()
+
+customers_list = customers_stripe.data
+
+df_customers = pd.DataFrame(customers_list)
+
+cur = con.cursor()
+
+cur.execute('SELECT * FROM BRONZE.STRIPE_CUSTOMERS')
+rows = cur.fetchall()
+
+for r in rows:
+    print(r)
+

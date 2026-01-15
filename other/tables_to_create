@@ -29,14 +29,16 @@ CREATE TABLE BRONZE.STRIPE_CUSTOMERS (
     EMAIL                               STRING,
     -- 13. invoice_prefix
     INVOICE_PREFIX                      STRING,
+
+    INVOICE_SETTINGS                    VARIANT,
     -- 14. invoice_settings.custom_fields
-    INVOICE_CUSTOM_FIELDS               VARIANT,
+--    INVOICE_CUSTOM_FIELDS               VARIANT,
     -- 15. invoice_settings.default_payment_method
-    INVOICE_DEFAULT_PAYMENT_METHOD      STRING,
+    --INVOICE_DEFAULT_PAYMENT_METHOD      STRING,
     -- 16. invoice_settings.footer
-    INVOICE_FOOTER                      STRING,
+    --INVOICE_FOOTER                      STRING,
     -- 17. invoice_settings.rendering_options
-    INVOICE_RENDERING_OPTIONS           VARIANT,
+    --INVOICE_RENDERING_OPTIONS           VARIANT,
     -- 18. livemode
     LIVEMODE                            BOOLEAN,
     -- 19. metadata
