@@ -31,4 +31,4 @@ jobs:
           STRIPE_PIPELINE_SNOWFLAKE_WAREHOUSE: ${{ secrets.STRIPE_PIPELINE_SNOWFLAKE_WAREHOUSE }}
           STRIPE_PIPELINE_SNOWFLAKE_DATABASE: ${{ secrets.STRIPE_PIPELINE_SNOWFLAKE_DATABASE }}
         run: |
-          python ingestion/stripe_pipeline.py
+          python ingestion/stripe_extraction_insertion.py
