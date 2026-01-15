@@ -1,0 +1,34 @@
+name: Stripe Bronze Ingestion
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # every day at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install stripe snowflake-connector-python python-dotenv
+
+      - name: Run Stripe ingestion
+        env:
+          STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+          STRIPE_PIPELINE_SNOWFLAKE_USER: ${{ secrets.STRIPE_PIPELINE_SNOWFLAKE_USER }}
+          STRIPE_PIPELINE_SNOWFLAKE_USER_PASSWORD: ${{ secrets.STRIPE_PIPELINE_SNOWFLAKE_USER_PASSWORD }}
+          STRIPE_PIPELINE_SNOWFLAKE_ACCOUNT: ${{ secrets.STRIPE_PIPELINE_SNOWFLAKE_ACCOUNT }}
+          STRIPE_PIPELINE_SNOWFLAKE_WAREHOUSE: ${{ secrets.STRIPE_PIPELINE_SNOWFLAKE_WAREHOUSE }}
+          STRIPE_PIPELINE_SNOWFLAKE_DATABASE: ${{ secrets.STRIPE_PIPELINE_SNOWFLAKE_DATABASE }}
+        run: |
+          python ingestion/stripe_pipeline.py
