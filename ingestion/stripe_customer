@@ -1,15 +1,19 @@
 import stripe
-import pandas as pd
+import json
 from snowflake import connector
+from dotenv import load_dotenv
+import os
 
-stripe.api_key = "sk_test_51SorWHGWM0V2FiE10HNFG4w5SASb6lnR1qGiYr4VMVx9bbIFm6sWgEzWQXwR1sPdEyniEhe4BSTtjIFcg2hLKKn000MOLecxcc"
+load_dotenv()
+
+stripe.api_key = os.environ["STRIPE_API_KEY"]
 
 con = connector.connect(
-    user='STRIPE_PIPELINE_USER',
-    password='123456789',
-    account='CUTHAVV-PN30619',
-    warehouse='FINANCE_DATA_PLATFORM_DW',
-    database='FINANCIAL_DATA_PLATFORM_DB',
+    user=os.environ["STRIPE_PIPELINE_SNOWFLAKE_USER"],
+    password=os.environ["STRIPE_PIPELINE_SNOWFLAKE_USER_PASSWORD"],
+    account=os.environ["STRIPE_PIPELINE_SNOWFLAKE_ACCOUNT"],
+    warehouse=os.environ["STRIPE_PIPELINE_SNOWFLAKE_WAREHOUSE"],
+    database=os.environ["STRIPE_PIPELINE_SNOWFLAKE_DATABASE"],
     schema='BRONZE'
 )
 
@@ -17,13 +21,19 @@ customers_stripe = stripe.Customer.list()
 
 customers_list = customers_stripe.data
 
-df_customers = pd.DataFrame(customers_list)
-
 cur = con.cursor()
 
-cur.execute('SELECT * FROM BRONZE.STRIPE_CUSTOMERS')
-rows = cur.fetchall()
+cur.execute("USE WAREHOUSE FINANCE_DATA_PLATFORM_DW")
+cur.execute("USE DATABASE FINANCIAL_DATA_PLATFORM_DB")
+cur.execute("USE SCHEMA BRONZE")
 
-for r in rows:
-    print(r)
-
+for c in customers_list:
+    cur.execute("""
+        INSERT INTO BRONZE.STRIPE_CUSTOMERS
+        (CUSTOMER_ID, OBJECT_TYPE, RAW_PAYLOAD)
+        SELECT %s, %s, PARSE_JSON(%s)
+    """, (
+        c["id"],
+        c["object"],
+        json.dumps(c)
+    ))
