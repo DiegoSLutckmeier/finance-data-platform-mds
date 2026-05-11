@@ -14,10 +14,13 @@ from pathlib import Path
 
 import pandas as pd
 import stripe
+from dotenv import load_dotenv
 
 
 def main() -> None:
     """Run a full refresh of Stripe customers into the Bronze layer."""
+
+    load_dotenv()
 
     stripe.api_key = os.environ["STRIPE_API_KEY"]
 
