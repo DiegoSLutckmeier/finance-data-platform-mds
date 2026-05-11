@@ -23,36 +23,74 @@ DEFAULT_ENTITIES = [
 ]
 
 
+ENTITY_REFRESH_STRATEGIES = {
+    "customers": {"mode": "full_refresh"},
+    "charges": {"mode": "lookback", "days": 30},
+    "payment_intents": {"mode": "lookback", "days": 30},
+    "payouts": {"mode": "lookback", "days": 30},
+    "balance_transactions": {"mode": "lookback", "days": 7},
+    "balance": {"mode": "snapshot"},
+}
+
+
 def extract_all(settings: Settings, entities: list[str] | None = None) -> dict[str, Path | None]:
     """Extract configured Stripe entities into Bronze Parquet files."""
 
     configure_stripe(settings.stripe_api_key)
     state = load_state(settings.state_path)
-    load_id = str(uuid.uuid4())
     outputs: dict[str, Path | None] = {}
 
     for entity in entities or DEFAULT_ENTITIES:
-        records = extract_entity(entity, state, settings.lookback_days)
+        load_id = str(uuid.uuid4())
+        records = extract_entity(entity, state)
         rows = build_bronze_rows(entity, records, load_id)
         outputs[entity] = write_bronze_parquet(settings.bronze_dir, entity, rows, load_id)
 
         last_created = _max_created(records) or get_last_created(state, entity)
         update_entity_state(state, entity, last_created, load_id)
+        save_state(settings.state_path, state)
 
-    save_state(settings.state_path, state)
     return outputs
 
 
-def extract_entity(entity: str, state: State, lookback_days: int) -> list[dict[str, Any]]:
-    """Extract one entity, using state for CDC-style incremental list endpoints."""
+def extract_one(settings: Settings, entity: str) -> Path | None:
+    """Extract one Stripe entity into its own Bronze Parquet load."""
 
-    if entity == "balance":
+    configure_stripe(settings.stripe_api_key)
+    state = load_state(settings.state_path)
+    load_id = str(uuid.uuid4())
+
+    records = extract_entity(entity, state)
+    rows = build_bronze_rows(entity, records, load_id)
+    output = write_bronze_parquet(settings.bronze_dir, entity, rows, load_id)
+
+    last_created = _max_created(records) or get_last_created(state, entity)
+    update_entity_state(state, entity, last_created, load_id)
+    save_state(settings.state_path, state)
+
+    return output
+
+
+def extract_entity(entity: str, state: State) -> list[dict[str, Any]]:
+    """Extract one entity using its configured refresh strategy."""
+
+    strategy = ENTITY_REFRESH_STRATEGIES.get(entity)
+    if strategy is None:
+        raise ValueError(f"Unsupported Stripe entity: {entity}")
+
+    if strategy["mode"] == "snapshot":
         snapshot = retrieve_balance_snapshot()
         snapshot["id"] = f"balance_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
         snapshot["created"] = int(datetime.now(timezone.utc).timestamp())
         return [snapshot]
 
-    created_gte = _created_gte_with_lookback(get_last_created(state, entity), lookback_days)
+    if strategy["mode"] == "full_refresh":
+        return list(iter_list_entity(entity, created_gte=None))
+
+    created_gte = _created_gte_with_lookback(
+        get_last_created(state, entity),
+        int(strategy["days"]),
+    )
     return list(iter_list_entity(entity, created_gte=created_gte))
 
 
@@ -67,4 +105,3 @@ def _created_gte_with_lookback(last_created: int | None, lookback_days: int) -> 
 def _max_created(records: list[dict[str, Any]]) -> int | None:
     created_values = [record.get("created") for record in records if record.get("created") is not None]
     return int(max(created_values)) if created_values else None
-

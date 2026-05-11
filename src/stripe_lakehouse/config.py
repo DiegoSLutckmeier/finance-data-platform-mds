@@ -15,7 +15,6 @@ class Settings:
     data_dir: Path
     state_path: Path
     duckdb_path: Path
-    lookback_days: int = 2
 
     @property
     def bronze_dir(self) -> Path:
@@ -33,7 +32,6 @@ def load_settings() -> Settings:
             os.getenv("STRIPE_STATE_PATH", str(data_dir / "state" / "stripe_state.json"))
         ),
         duckdb_path=Path(os.getenv("DUCKDB_PATH", str(data_dir / "finance_lakehouse.duckdb"))),
-        lookback_days=int(os.getenv("STRIPE_LOOKBACK_DAYS", "2")),
     )
 
 
@@ -42,4 +40,3 @@ def _required_env(name: str) -> str:
     if not value:
         raise RuntimeError(f"Missing required environment variable: {name}")
     return value
-
