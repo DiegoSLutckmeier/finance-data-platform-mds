@@ -87,11 +87,14 @@ def extract_entity(entity: str, state: State) -> list[dict[str, Any]]:
     if strategy["mode"] == "full_refresh":
         return list(iter_list_entity(entity, created_gte=None))
 
-    created_gte = _created_gte_with_lookback(
-        get_last_created(state, entity),
-        int(strategy["days"]),
-    )
-    return list(iter_list_entity(entity, created_gte=created_gte))
+    if strategy["mode"] == "lookback":
+        created_gte = _created_gte_with_lookback(
+            get_last_created(state, entity),
+            int(strategy["days"]),
+        )
+        return list(iter_list_entity(entity, created_gte=created_gte))
+
+    raise ValueError(f"Unsupported refresh strategy for {entity}: {strategy['mode']}")
 
 
 def _created_gte_with_lookback(last_created: int | None, lookback_days: int) -> int | None:
