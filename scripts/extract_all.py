@@ -1,4 +1,4 @@
-"""V3 orchestrator: run entity extractors one table at a time."""
+"""Run entity extractors one table at a time."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT / "scripts"))
 
-import extract_entity_v3
+import extract_entity
 
 
 ENTITIES = [
@@ -24,7 +24,7 @@ def main() -> None:
     for entity in ENTITIES:
         print(f"\nStarting {entity}")
         try:
-            result = extract_entity_v3.load_entity(entity)
+            result = extract_entity.load_entity(entity)
         except Exception as exc:
             result = {
                 "entity": entity,

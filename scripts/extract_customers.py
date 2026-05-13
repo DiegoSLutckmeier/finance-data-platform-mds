@@ -1,4 +1,4 @@
-"""V2 learning script: extract Stripe customers using small helper modules."""
+"""Extract Stripe customers using small helper modules."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""V3 extractor: load one Stripe entity with an explicit refresh strategy."""
+"""Extract one Stripe entity with an explicit refresh strategy."""
 
 from __future__ import annotations
 

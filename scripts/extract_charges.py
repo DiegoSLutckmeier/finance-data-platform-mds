@@ -1,4 +1,4 @@
-"""V2 learning script: extract Stripe charges using a 30-day lookback."""
+"""Extract Stripe charges using a 30-day lookback."""
 
 from __future__ import annotations
 
