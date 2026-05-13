@@ -21,6 +21,10 @@ from stripe_lakehouse import bronze_writer, config, state, stripe_client
 ENTITY_STRATEGIES = {
     "customers": {"mode": "full_refresh"},
     "charges": {"mode": "lookback", "days": 30},
+    "payment_intents": {"mode": "lookback", "days": 30},
+    "payouts": {"mode": "lookback", "days": 30},
+    "balance_transactions": {"mode": "lookback", "days": 7},
+    "balance": {"mode": "snapshot"},
 }
 
 
@@ -43,7 +47,7 @@ def load_entity(entity: str) -> dict[str, Any]:
 
     try:
         created_gte = calculate_created_gte(entity, strategy, state_data)
-        records = list(stripe_client.iter_list_entity(entity, created_gte=created_gte))
+        records = extract_records(entity, strategy, created_gte)
         bronze_rows = bronze_writer.build_bronze_rows(
             entity=entity,
             records=records,
@@ -119,6 +123,9 @@ def calculate_created_gte(
     strategy: dict[str, Any],
     state_data: state.State,
 ) -> int | None:
+    if strategy["mode"] == "snapshot":
+        return None
+
     if strategy["mode"] == "full_refresh":
         return None
 
@@ -133,6 +140,20 @@ def calculate_created_gte(
         return int(lookback_start.timestamp())
 
     raise ValueError(f"Unsupported strategy mode: {strategy['mode']}")
+
+
+def extract_records(
+    entity: str,
+    strategy: dict[str, Any],
+    created_gte: int | None,
+) -> list[dict[str, Any]]:
+    if strategy["mode"] == "snapshot":
+        snapshot = stripe_client.retrieve_balance_snapshot()
+        snapshot["id"] = f"balance_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        snapshot["created"] = int(datetime.now(timezone.utc).timestamp())
+        return [snapshot]
+
+    return list(stripe_client.iter_list_entity(entity, created_gte=created_gte))
 
 
 def describe_strategy(strategy: dict[str, Any]) -> str:

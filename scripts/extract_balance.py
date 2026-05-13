@@ -1,4 +1,4 @@
-"""Extract Stripe customers."""
+"""Extract a Stripe balance snapshot."""
 
 from __future__ import annotations
 
@@ -13,4 +13,4 @@ import extract_entity
 
 
 if __name__ == "__main__":
-    extract_entity.load_entity("customers")
+    extract_entity.load_entity("balance")
