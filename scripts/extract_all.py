@@ -15,6 +15,10 @@ import extract_entity
 ENTITIES = [
     "customers",
     "charges",
+    "payment_intents",
+    "payouts",
+    "balance_transactions",
+    "balance",
 ]
 
 
