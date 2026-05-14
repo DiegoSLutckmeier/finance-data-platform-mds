@@ -7,19 +7,10 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.append(str(PROJECT_ROOT / "scripts"))
+sys.path.append(str(PROJECT_ROOT / "src"))
 
-import extract_entity
-
-
-ENTITIES = [
-    "customers",
-    "charges",
-    "payment_intents",
-    "payouts",
-    "balance_transactions",
-    "balance",
-]
+from stripe_lakehouse.extraction.extract_entity import load_entity
+from stripe_lakehouse.extraction.strategies import ENTITIES
 
 
 def main() -> None:
@@ -28,7 +19,7 @@ def main() -> None:
     for entity in ENTITIES:
         print(f"\nStarting {entity}")
         try:
-            result = extract_entity.load_entity(entity)
+            result = load_entity(entity)
         except Exception as exc:
             result = {
                 "entity": entity,
