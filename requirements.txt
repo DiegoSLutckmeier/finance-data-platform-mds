@@ -2,4 +2,4 @@ stripe
 pandas
 pyarrow
 python-dotenv
-
+duckdb
