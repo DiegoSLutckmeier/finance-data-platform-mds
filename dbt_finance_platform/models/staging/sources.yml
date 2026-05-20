@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: stripe_bronze
+    description: Raw Stripe objects stored as Bronze DuckDB views over Parquet files.
+    schema: bronze
+    tables:
+      - name: stripe_customers
+      - name: stripe_charges
+      - name: stripe_payment_intents
+      - name: stripe_payouts
+      - name: stripe_balance_transactions
+      - name: stripe_balance
+

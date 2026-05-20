@@ -1,0 +1,9 @@
+dbt_finance_platform:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../data/finance_lakehouse.duckdb"
+      schema: main
+      threads: 4
+
