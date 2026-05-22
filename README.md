@@ -51,6 +51,45 @@ data/
 
 ## Useful Commands
 
+### Run With Airflow And Docker
+
+Build the local Airflow image:
+
+```bash
+docker compose build
+```
+
+Initialize Airflow metadata tables and create the local admin user:
+
+```bash
+docker compose up airflow-init
+```
+
+Start the Airflow webserver and scheduler:
+
+```bash
+docker compose up airflow-webserver airflow-scheduler
+```
+
+Then open Airflow at:
+
+```text
+http://localhost:8080
+```
+
+Login:
+
+```text
+username: airflow
+password: airflow
+```
+
+The DAG is named `stripe_lakehouse_pipeline`.
+
+Docker runs Airflow in isolated containers, but the project folder is mounted into the containers at `/opt/airflow/project`. That means code changes made in VS Code are visible to Airflow without rebuilding the image. Rebuild the image only when Python dependencies change.
+
+### Run Manually
+
 Run all Stripe extractions:
 
 ```bash
@@ -91,10 +130,9 @@ Silver:
 Gold:
 
 - `dim_customers`
-- `fct_revenue`
+- `fct_payments`
 - `fct_cash_flow`
 
 ## Notes
 
 This version intentionally uses local files and DuckDB instead of a cloud warehouse. That keeps the project easier to learn, cheaper to run, and still close to the shape of a real lakehouse pipeline.
-

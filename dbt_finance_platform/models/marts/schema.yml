@@ -21,11 +21,11 @@ models:
               config:
                 where: "customer_segment is not null"
 
-  - name: fct_revenue
-    description: Revenue fact table built from Stripe payment intents and charges.
+  - name: fct_payments
+    description: Payment fact table built from Stripe payment intents and charges.
     columns:
       - name: payment_intent_id
-        description: Primary key for the revenue fact.
+        description: Primary key for the payment fact.
         data_tests:
           - unique
           - not_null
