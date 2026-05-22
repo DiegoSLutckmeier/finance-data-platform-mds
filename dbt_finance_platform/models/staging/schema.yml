@@ -1,0 +1,153 @@
+version: 2
+
+models:
+  - name: stg_stripe_customers
+    description: Cleaned and deduplicated Stripe customers from the Bronze layer.
+    columns:
+      - name: customer_id
+        description: Primary key for the Stripe customer.
+        data_tests:
+          - unique
+          - not_null
+      - name: email
+        description: Customer email address from Stripe.
+      - name: customer_segment
+        description: Customer segment from seeded Stripe metadata.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - starter
+                  - professional
+                  - enterprise
+              config:
+                where: "customer_segment is not null"
+      - name: stripe_created_at
+        description: Timestamp when the customer was created in Stripe.
+        data_tests:
+          - not_null
+
+  - name: stg_stripe_payment_intents
+    description: Cleaned and deduplicated Stripe payment intents from the Bronze layer.
+    columns:
+      - name: payment_intent_id
+        description: Primary key for the Stripe payment intent.
+        data_tests:
+          - unique
+          - not_null
+      - name: status
+        description: Current Stripe payment intent status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - requires_payment_method
+                  - requires_confirmation
+                  - requires_action
+                  - processing
+                  - requires_capture
+                  - canceled
+                  - succeeded
+      - name: currency
+        description: Three-letter lowercase currency code.
+        data_tests:
+          - not_null
+      - name: amount_cents
+        description: Payment intent amount in the currency's smallest unit.
+        data_tests:
+          - not_null
+
+  - name: stg_stripe_charges
+    description: Cleaned and deduplicated Stripe charges from the Bronze layer.
+    columns:
+      - name: charge_id
+        description: Primary key for the Stripe charge.
+        data_tests:
+          - unique
+          - not_null
+      - name: payment_intent_id
+        description: Payment intent associated with the charge.
+      - name: status
+        description: Current Stripe charge status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - succeeded
+                  - pending
+                  - failed
+      - name: currency
+        description: Three-letter lowercase currency code.
+        data_tests:
+          - not_null
+      - name: amount_cents
+        description: Charge amount in the currency's smallest unit.
+        data_tests:
+          - not_null
+
+  - name: stg_stripe_balance_transactions
+    description: Cleaned and deduplicated Stripe balance transactions from the Bronze layer.
+    columns:
+      - name: balance_transaction_id
+        description: Primary key for the Stripe balance transaction.
+        data_tests:
+          - unique
+          - not_null
+      - name: status
+        description: Balance transaction availability status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - available
+                  - pending
+      - name: currency
+        description: Three-letter lowercase currency code.
+        data_tests:
+          - not_null
+      - name: amount_cents
+        description: Gross amount in the currency's smallest unit.
+        data_tests:
+          - not_null
+      - name: net_cents
+        description: Net amount after Stripe fees in the currency's smallest unit.
+        data_tests:
+          - not_null
+
+  - name: stg_stripe_payouts
+    description: Cleaned and deduplicated Stripe payouts from the Bronze layer.
+    columns:
+      - name: payout_id
+        description: Primary key for the Stripe payout.
+        data_tests:
+          - unique
+          - not_null
+      - name: status
+        description: Current Stripe payout status.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - paid
+                  - pending
+                  - in_transit
+                  - canceled
+                  - failed
+              config:
+                where: "status is not null"
+
+  - name: stg_stripe_balance
+    description: Stripe balance snapshots from the Bronze layer.
+    columns:
+      - name: balance_snapshot_id
+        description: Generated snapshot identifier for the balance API response.
+        data_tests:
+          - unique
+          - not_null
+      - name: extracted_at
+        description: Timestamp when the balance snapshot was extracted.
+        data_tests:
+          - not_null

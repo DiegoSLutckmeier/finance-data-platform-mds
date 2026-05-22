@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: Customer dimension built from cleaned Stripe customer records.
+    columns:
+      - name: customer_id
+        description: Primary key for the customer dimension.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_segment
+        description: Customer segment from Stripe metadata.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - starter
+                  - professional
+                  - enterprise
+              config:
+                where: "customer_segment is not null"
+
+  - name: fct_payments
+    description: Payment fact table built from Stripe payment intents and charges.
+    columns:
+      - name: payment_intent_id
+        description: Primary key for the payment fact.
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Customer associated with the payment intent.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+              config:
+                where: "customer_id is not null"
+      - name: payment_status
+        description: Stripe payment intent status.
+        data_tests:
+          - not_null
+      - name: currency
+        description: Three-letter lowercase currency code.
+        data_tests:
+          - not_null
+      - name: amount_cents
+        description: Payment amount in the currency's smallest unit.
+        data_tests:
+          - not_null
+
+  - name: fct_cash_flow
+    description: Cash flow fact table built from Stripe balance transactions.
+    columns:
+      - name: balance_transaction_id
+        description: Primary key for the cash flow fact.
+        data_tests:
+          - unique
+          - not_null
+      - name: status
+        description: Balance transaction status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - available
+                  - pending
+      - name: currency
+        description: Three-letter lowercase currency code.
+        data_tests:
+          - not_null
+      - name: amount_cents
+        description: Gross balance transaction amount.
+        data_tests:
+          - not_null
+      - name: net_cents
+        description: Net amount after fees.
+        data_tests:
+          - not_null

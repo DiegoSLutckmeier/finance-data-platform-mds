@@ -1,13 +1,14 @@
+.git
 .env
-data/
-logs/
-*.parquet
-*.duckdb
-.vscode/
-
+.vscode
+.DS_Store
 __pycache__/
 *.pyc
-.DS_Store
+
+data/
+logs/
+*.duckdb
+*.parquet
 
 dbt_finance_platform/target/
 dbt_finance_platform/logs/

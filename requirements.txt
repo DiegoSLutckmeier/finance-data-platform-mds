@@ -1,0 +1,6 @@
+stripe
+pandas
+pyarrow
+python-dotenv
+duckdb
+dbt-duckdb
