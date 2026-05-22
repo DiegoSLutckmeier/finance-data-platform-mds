@@ -3,4 +3,12 @@ data/
 logs/
 *.parquet
 *.duckdb
-.vscode/*
+.vscode/
+
+__pycache__/
+*.pyc
+.DS_Store
+
+dbt_finance_platform/target/
+dbt_finance_platform/logs/
+dbt_finance_platform/.user.yml

@@ -1,15 +1,20 @@
-Welcome to your new dbt project!
+# dbt Finance Platform
 
-### Using the starter project
+This dbt project transforms local Stripe Bronze views in DuckDB into Silver staging models and Gold analytics marts.
 
-Try running the following commands:
-- dbt run
-- dbt test
+## Layers
 
+- `models/staging`: Silver models. These clean, type, and deduplicate Stripe objects from Bronze.
+- `models/marts`: Gold models. These shape Silver data into analytics-ready tables.
 
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+## Run
+
+From this folder:
+
+```bash
+DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt run
+DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt test
+```
+
+The connection is defined in `profiles.yml`, which points dbt to `../data/finance_lakehouse.duckdb`.
+

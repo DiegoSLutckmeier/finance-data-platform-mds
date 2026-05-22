@@ -1,227 +1,100 @@
-# finance-data-platform-mds
+# Open Financial Lakehouse: Stripe Analytics Pipeline
 
+Local-first data platform that extracts Stripe test-mode data, stores the raw API responses as Bronze Parquet files, exposes them through DuckDB, and transforms them with dbt into Silver and Gold analytics models.
 
-# GitHub folder structure
-data-platform/
-├── pyproject.toml
-├── README.md
-├── docker-compose.yml
-├── .env.example
-│
-├── ingestion/
-│   ├── stripe/
-│   │   └── extract.py
-│   ├── crypto/
-│   │   └── stream.py
-│   └── common.py
-│
-├── pipelines/
-│   ├── daily_batch.py
-│   └── streaming.py
-│
-├── dbt/
-│   ├── dbt_project.yml
-│   └── models/
-│       ├── staging/
-│       └── marts/
-│
-├── warehouse/
-│   └── snowflake.sql
-│
-└── quality/
-    └── expectations.yml
+## Architecture
 
+```text
+Stripe API
+   |
+   v
+Python extraction scripts
+   |
+   v
+Bronze Parquet files under data/bronze/stripe/
+   |
+   v
+DuckDB Bronze views
+   |
+   v
+dbt Silver staging models
+   |
+   v
+dbt Gold marts
+```
 
+## Layers
 
-Bronze -> isomorphic relationship with source data (source fidelity).
+Bronze keeps the raw Stripe JSON payloads plus audit metadata such as `load_id`, `extracted_at`, and `source`. This layer is append-only and can contain repeated records from multiple loads.
 
-Silver -> unification and standardisation across sources.
+Silver cleans and deduplicates the Stripe objects. These models cast JSON fields into typed columns and keep one latest version per Stripe object.
 
-Gold -> isomorphic relationship with destination (presentation fidelity).
+Gold contains business-ready tables for analysis, such as customers, revenue/payments, and cash flow.
 
+## Main Folders
 
+```text
+src/stripe_lakehouse/
+  Core Python package for configuration, Stripe API access, state handling,
+  Bronze writing, and extraction strategies.
 
+scripts/
+  Runnable commands for seeding Stripe test data, extracting data,
+  validating Bronze files, and creating DuckDB Bronze views.
 
+dbt_finance_platform/
+  dbt project with Silver staging models and Gold marts.
 
-Absolutely. Here is the clean, final 4-week plan, aligned with what you already built and how real data platform teams would execute it.
+data/
+  Local generated lakehouse data. This folder is ignored by Git.
+```
 
-This is not aspirational — it’s realistic, scoped, and credible.
+## Useful Commands
 
-⸻
+Run all Stripe extractions:
 
-🗓 4-Week Data Platform Plan (Stripe + Snowflake + dbt)
+```bash
+/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python scripts/extract_all.py
+```
 
-Week 1 — Core data platform (FOUNDATION)
+Validate Bronze files:
 
-Goal: Real financial data landing automatically in a cloud warehouse.
+```bash
+/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python scripts/validate_bronze.py
+```
 
-What you build
-	•	Snowflake setup:
-	•	Account, warehouse, database
-	•	Schemas: BRONZE, SILVER, GOLD
-	•	Service user + role
-	•	Stripe ingestion (Python):
-	•	Customers
-	•	Payment Intents
-	•	Charges
-	•	Balance Transactions
-	•	Payouts
-	•	Balance (snapshot)
-	•	Bronze tables (append-only, JSON):
-	•	BRONZE.STRIPE_CUSTOMERS
-	•	BRONZE.STRIPE_PAYMENT_INTENTS
-	•	BRONZE.STRIPE_CHARGES
-	•	BRONZE.STRIPE_BALANCE_TRANSACTIONS
-	•	BRONZE.STRIPE_PAYOUTS
-	•	BRONZE.STRIPE_BALANCE
-	•	GitHub:
-	•	Repo structure
-	•	Secrets configured
-	•	GitHub Actions scheduled daily ingestion
+Create DuckDB Bronze views:
 
-Outcome
+```bash
+/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python scripts/create_duckdb_bronze_views.py
+```
 
-✔ Real Stripe data in Snowflake
-✔ Fully automated
-✔ Replayable and auditable Bronze layer
+Run dbt:
 
-Status: ✅ Completed
+```bash
+cd dbt_finance_platform
+DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt run
+DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt test
+```
 
-⸻
+## Current Models
 
-Week 2 — Analytics layer with dbt (TRANSFORMATION)
+Silver:
 
-Goal: Turn raw Stripe JSON into clean, queryable business tables.
+- `stg_stripe_customers`
+- `stg_stripe_payment_intents`
+- `stg_stripe_charges`
+- `stg_stripe_balance_transactions`
+- `stg_stripe_payouts`
+- `stg_stripe_balance`
 
-What you build
+Gold:
 
-Silver (staging models)
-	•	stg_stripe_customers
-	•	stg_stripe_payment_intents
-	•	stg_stripe_charges
-	•	stg_stripe_balance_transactions
-	•	stg_stripe_payouts
-	•	stg_stripe_balance_snapshots
+- `dim_customers`
+- `fct_revenue`
+- `fct_cash_flow`
 
-Features:
-	•	Deduplication (latest record per ID)
-	•	JSON flattening
-	•	Type casting
-	•	dbt tests (not_null, unique)
+## Notes
 
-Gold (business models)
-	•	dim_customers
-	•	fct_revenue
-	•	fct_cash_flow
-	•	fct_fees
-	•	fct_refunds
+This version intentionally uses local files and DuckDB instead of a cloud warehouse. That keeps the project easier to learn, cheaper to run, and still close to the shape of a real lakehouse pipeline.
 
-dbt extras
-	•	Documentation (dbt docs generate)
-	•	Lineage graph
-	•	Column descriptions
-
-Outcome
-
-✔ CFO-grade analytics tables
-✔ Tested, documented models
-✔ Clear lineage from Stripe → metrics
-
-⸻
-
-Week 3 — Orchestration + Streaming (REALISM)
-
-Goal: Make it look like a production data platform.
-
-Orchestration
-	•	Add Airflow or Prefect
-	•	DAG:
-
-Stripe ingestion
-      ↓
-   dbt run
-      ↓
-   dbt test
-
-
-	•	Backfill capability
-	•	Failure visibility
-
-Streaming
-	•	Binance WebSocket
-	•	Kafka (Docker)
-	•	Stream trades into:
-	•	BRONZE.CRYPTO_TRADES
-	•	Optional dbt model:
-	•	stg_crypto_trades
-
-Outcome
-
-✔ Batch + streaming in one platform
-✔ Event-driven ingestion
-✔ Modern data stack credibility
-
-⸻
-
-Week 4 — Data quality + polish (ENTERPRISE)
-
-Goal: Make the project interview- and production-ready.
-
-Data quality
-	•	Great Expectations:
-	•	revenue ≥ 0
-	•	no null customer IDs
-	•	valid currencies
-	•	Run checks before dbt models
-	•	Fail pipeline on violations
-
-Monitoring
-	•	Pipeline success/failure visibility
-	•	Row count checks
-	•	Schema drift awareness
-
-Documentation
-	•	README:
-	•	Architecture diagram
-	•	Medallion layers
-	•	Tech stack explanation
-	•	Screenshots:
-	•	Snowflake tables
-	•	dbt lineage graph
-	•	GitHub Actions runs
-
-Outcome
-
-✔ Enterprise-grade data platform
-✔ Clear narrative for interviews
-✔ Strong portfolio signal
-
-⸻
-
-What this gives you professionally
-
-This single project demonstrates:
-
-✔ Snowflake
-✔ Python ELT
-✔ dbt
-✔ Medallion architecture
-✔ CI/CD (GitHub Actions)
-✔ Orchestration
-✔ Streaming (Kafka)
-✔ Data quality
-✔ Financial analytics
-
-This is exactly what fintech, Web3, and data platform teams are hiring for in 2026.
-
-⸻
-
-Where you are right now
-
-You have fully completed Week 1
-and laid the foundation for Week 2.
-
-The correct next step is:
-👉 Create stg_stripe_customers in dbt and run it
-
-When you’re ready, we’ll write that model together and review it like a real PR.
