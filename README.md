@@ -49,6 +49,12 @@ data/
   Local generated lakehouse data. This folder is ignored by Git.
 ```
 
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [Local setup](docs/local_setup.md)
+- [Airflow](docs/airflow.md)
+
 ## Useful Commands
 
 ### Run With Airflow And Docker
