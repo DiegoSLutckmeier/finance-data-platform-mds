@@ -1,12 +1,9 @@
 with bronze as (
-
     select *
     from {{ source('stripe_bronze', 'stripe_payment_intents') }}
-
 ),
 
 typed as (
-
     select
         object_id as payment_intent_id,
         json_extract_string(raw_payload, '$.customer') as customer_id,
@@ -23,11 +20,9 @@ typed as (
         load_id,
         raw_payload
     from bronze
-
 ),
 
 deduplicated as (
-
     select
         *,
         row_number() over (
@@ -35,7 +30,6 @@ deduplicated as (
             order by extracted_at desc, load_id desc
         ) as row_number_latest
     from typed
-
 )
 
 select
@@ -51,8 +45,6 @@ select
     seed_batch_id,
     stripe_created_at,
     extracted_at,
-    load_id,
-    raw_payload
+    load_id
 from deduplicated
 where row_number_latest = 1
-

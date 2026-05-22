@@ -46,10 +46,11 @@ def create_bronze_view(
     bronze_dir: Path,
     entity: str,
 ) -> None:
-    parquet_glob = str(bronze_dir / entity / "**" / "*.parquet")
+    entity_dir = (bronze_dir / entity).resolve()
+    parquet_glob = str(entity_dir / "**" / "*.parquet")
     view_name = f"bronze.stripe_{entity}"
 
-    if not list((bronze_dir / entity).glob("**/*.parquet")):
+    if not list(entity_dir.glob("**/*.parquet")):
         connection.execute(
             f"""
             create or replace view {view_name} as

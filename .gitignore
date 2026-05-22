@@ -3,3 +3,4 @@ data/
 logs/
 *.parquet
 *.duckdb
+.vscode/*
