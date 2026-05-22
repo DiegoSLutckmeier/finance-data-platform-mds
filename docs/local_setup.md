@@ -2,16 +2,16 @@
 
 ## Python Environment
 
-The project has been tested with the local `sparkenv` environment:
+The project has been tested with Python 3.12.
 
 ```bash
-/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python
+python --version
 ```
 
 Install Python dependencies:
 
 ```bash
-/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 ## Environment Variables
@@ -32,27 +32,27 @@ The `.env` file is ignored by Git because it can contain secrets.
 Run extraction:
 
 ```bash
-/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python scripts/extract_all.py
+python scripts/extract_all.py
 ```
 
 Validate Bronze files:
 
 ```bash
-/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python scripts/validate_bronze.py
+python scripts/validate_bronze.py
 ```
 
 Create DuckDB Bronze views:
 
 ```bash
-/Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/python scripts/create_duckdb_bronze_views.py
+python scripts/create_duckdb_bronze_views.py
 ```
 
 Run dbt:
 
 ```bash
 cd dbt_finance_platform
-DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt run
-DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt test
+DBT_PROFILES_DIR=. dbt run
+DBT_PROFILES_DIR=. dbt test
 ```
 
 ## dbt Documentation
@@ -63,8 +63,8 @@ From the dbt project folder:
 
 ```bash
 cd /Users/diegolutckmeier/Developer/Projects/finance-data-platform-mds/dbt_finance_platform
-DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt docs generate
-DBT_PROFILES_DIR=. /Users/diegolutckmeier/miniconda3/envs/sparkenv/bin/dbt docs serve --port 8082
+DBT_PROFILES_DIR=. dbt docs generate
+DBT_PROFILES_DIR=. dbt docs serve --port 8082
 ```
 
 Then open:
@@ -74,4 +74,3 @@ http://localhost:8082
 ```
 
 Port `8082` is used here to avoid conflict with Airflow, which usually runs on port `8080`.
-
